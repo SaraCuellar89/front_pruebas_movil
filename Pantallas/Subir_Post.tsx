@@ -2,7 +2,7 @@ import React from "react";
 import { ScrollView, View, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Menu from "../Componentes/Menu";
-import Formu_Subir_Post from "../Componentes/Formu_subir_post";
+import Formu_Subir_Post from "../Componentes/Formu_Subir_Post";
 
 const Subir_Post = () => {
     return(

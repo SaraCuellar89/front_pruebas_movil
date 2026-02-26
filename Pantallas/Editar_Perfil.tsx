@@ -1,7 +1,6 @@
 import React from "react";
 import { ScrollView, View, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Formu_Registro from "../Componentes/Formu_Registro";
 import Formu_Editar_Perfil from "../Componentes/Formu_Editar_Perfil";
 
 const Editar_Perfil = () => {

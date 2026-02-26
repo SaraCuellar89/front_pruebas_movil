@@ -23,6 +23,11 @@ const Menu = () => {
                 <Text style={styles.label}>Subir</Text>
             </TouchableOpacity>
 
+            <TouchableOpacity style={styles.item} onPress={() => navigation.navigate('Notificaciones')}>
+                <Text style={styles.icon}>🔔</Text>
+                <Text style={styles.label}>Notificaciones</Text>
+            </TouchableOpacity>
+
             <TouchableOpacity style={styles.item} onPress={() => navigation.navigate('Perfil')}>
                 <Text style={styles.icon}>👤</Text>
                 <Text style={styles.label}>Perfil</Text>

@@ -6,6 +6,7 @@ import Inicio from './Pantallas/Inicio';
 import Subir_Post from './Pantallas/Subir_Post';
 import Perfil from './Pantallas/Perfil';
 import Editar_Perfil from './Pantallas/Editar_Perfil';
+import Notificaciones from './Pantallas/Notificaciones';
 
 export type RootStackParamList = {
   Inicio_Sesion: undefined,
@@ -14,6 +15,7 @@ export type RootStackParamList = {
   Subir_Post: undefined,
   Perfil: undefined,
   Editar_Perfil: undefined,
+  Notificaciones: undefined,
 }
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -60,6 +62,13 @@ const App = () => {
         <Stack.Screen 
             name="Editar_Perfil" 
             component={Editar_Perfil} 
+            options={{ 
+                headerShown: true 
+            }}
+        />
+        <Stack.Screen 
+            name="Notificaciones" 
+            component={Notificaciones} 
             options={{ 
                 headerShown: true 
             }}
