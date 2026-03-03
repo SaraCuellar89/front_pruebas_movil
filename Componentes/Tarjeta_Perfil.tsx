@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Text, TouchableOpacity, View, StyleSheet, Alert } from "react-native";
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -10,6 +10,19 @@ type navigationProp = NativeStackNavigationProp<RootStackParamList, "Inicio_Sesi
 const Tarjeta_Perfil = () => {
 
     const navigation = useNavigation<navigationProp>();
+
+    const [nombre, setNombre] = useState("");
+
+    useEffect(() => {
+        const Obtener_Info_Usuario = async () => {
+            const usuarioStr = await AsyncStorage.getItem("usuario"); // Obtener usuario 
+            const usuario = usuarioStr ? JSON.parse(usuarioStr) : null;
+            
+            setNombre(usuario.nombre)
+        }
+
+        Obtener_Info_Usuario()
+    }, [])
 
     const Cerrar_Sesion = () => {
         Alert.alert(
@@ -40,7 +53,7 @@ const Tarjeta_Perfil = () => {
 
     return(
         <View style={styles.card}>
-            <Text style={styles.nombre}>Nombre Usuario</Text>
+            <Text style={styles.nombre}>Nombre {nombre}</Text>
 
             <TouchableOpacity style={styles.botonPrimario} onPress={() => navigation.navigate('Editar_Perfil')}>
                 <Text style={styles.textoBotonPrimario}>Editar Perfil</Text>

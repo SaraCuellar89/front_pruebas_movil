@@ -62,6 +62,8 @@ const Formu_Inicio_Sesion = () => {
     const Iniciar_Sesion_Google = async () => {
         try {
             await GoogleSignin.hasPlayServices();
+            await GoogleSignin.signOut();
+
             const userInfo = await GoogleSignin.signIn();
             const idToken = userInfo.data?.idToken;
 
@@ -125,7 +127,7 @@ const Formu_Inicio_Sesion = () => {
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.button} onPress={Iniciar_Sesion_Google}>
-                <Text style={styles.buttonText}>Entrar con Google</Text>
+                <Text style={styles.buttonText}>Hola</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Registro')}>

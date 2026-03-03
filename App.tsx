@@ -1,12 +1,13 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NavigationContainer } from '@react-navigation/native';
-import Inicio_Sesion from './Pantallas/Incio_Sesion';
+import Inicio_Sesion from './Pantallas/Inicio_Sesion';
 import Registro from './Pantallas/Registro';
 import Inicio from './Pantallas/Inicio';
 import Subir_Post from './Pantallas/Subir_Post';
 import Perfil from './Pantallas/Perfil';
 import Editar_Perfil from './Pantallas/Editar_Perfil';
 import Notificaciones from './Pantallas/Notificaciones';
+
 
 export type RootStackParamList = {
   Inicio_Sesion: undefined,

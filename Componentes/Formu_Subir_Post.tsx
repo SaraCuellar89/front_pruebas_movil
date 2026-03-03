@@ -4,32 +4,122 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-  StyleSheet
+  StyleSheet,
+  Image,
+  Alert,
+  ScrollView,
+  ActivityIndicator,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
+import {
+  launchImageLibrary,
+  launchCamera,
+  Asset,
+} from "react-native-image-picker";
+
+const API_URL = "https://tu-backend.com/api"; // 🔧 Cambia esto
 
 const Formu_Subir_Post = () => {
+  const [titulo, setTitulo]             = useState("");
+  const [descripcion, setDescripcion]   = useState("");
+  const [ingredientes, setIngredientes] = useState("");
+  const [tiempo, setTiempo]             = useState("");
+  const [dificultad, setDificultad]     = useState("Facil");
+  const [imagen, setImagen]             = useState<Asset | null>(null);
+  const [cargando, setCargando]         = useState(false);
 
-  const [dificultad, setDificultad] = useState("Facil");
+  // ── Galería ────────────────────────────────────────────────────────────────
+  const seleccionarImagen = () => {
+    launchImageLibrary({ mediaType: "photo", quality: 0.8 }, (res) => {
+      if (res.didCancel || res.errorCode) return;
+      setImagen(res.assets?.[0] ?? null);
+    });
+  };
+
+  // ── Cámara ─────────────────────────────────────────────────────────────────
+  const tomarFoto = () => {
+    launchCamera({ mediaType: "photo", quality: 0.8 }, (res) => {
+      if (res.didCancel || res.errorCode) return;
+      setImagen(res.assets?.[0] ?? null);
+    });
+  };
+
+  // ── Elegir fuente ──────────────────────────────────────────────────────────
+  const elegirFuente = () => {
+    Alert.alert("Agregar imagen", "¿De dónde quieres subir la foto?", [
+      { text: "Galería",  onPress: seleccionarImagen },
+      { text: "Cámara",   onPress: tomarFoto },
+      { text: "Cancelar", style: "cancel" },
+    ]);
+  };
+
+  // ── Enviar al backend ──────────────────────────────────────────────────────
+  const publicar = async () => {
+    if (!titulo.trim() || !imagen) {
+      Alert.alert("Faltan datos", "El título y la imagen son obligatorios.");
+      return;
+    }
+
+    setCargando(true);
+    try {
+      const form = new FormData();
+      form.append("titulo",       titulo);
+      form.append("descripcion",  descripcion);
+      form.append("ingredientes", ingredientes);
+      form.append("tiempo",       tiempo);
+      form.append("dificultad",   dificultad);
+
+      // El campo se llama "archivo" para coincidir con upload.single('archivo')
+      form.append("archivo", {
+        uri:  imagen.uri,
+        name: imagen.fileName ?? "foto.jpg",
+        type: imagen.type     ?? "image/jpeg",
+      } as any);
+
+      const token = "AQUI_VA_TU_JWT"; // 🔧 ej: await AsyncStorage.getItem("token")
+
+      const res = await fetch(`${API_URL}/subir`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          // ⚠️ NO agregues Content-Type manualmente,
+          // fetch lo genera solo con el boundary correcto
+        },
+        body: form,
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message ?? "Error al publicar");
+
+      Alert.alert("¡Listo!", "Tu receta fue publicada.");
+      // navigation.goBack()
+    } catch (err: any) {
+      Alert.alert("Error", err.message);
+    } finally {
+      setCargando(false);
+    }
+  };
 
   return (
-    <View style={styles.container}>
+    <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Subir Receta 🍲</Text>
+
+      {/* Selector de imagen */}
+      <TouchableOpacity style={styles.imagePicker} onPress={elegirFuente}>
+        {imagen ? (
+          <Image source={{ uri: imagen.uri }} style={styles.preview} />
+        ) : (
+          <Text style={styles.imagePlaceholder}>📷  Toca para agregar foto</Text>
+        )}
+      </TouchableOpacity>
 
       <View style={styles.inputContainer}>
         <Text style={styles.label}>Título</Text>
         <TextInput
           style={styles.input}
           placeholder="Ej: Ajiaco Santafereño"
-        />
-      </View>
-
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>URL de Imagen</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="https://ejemplo.com/imagen.jpg"
-          autoCapitalize="none"
+          value={titulo}
+          onChangeText={setTitulo}
         />
       </View>
 
@@ -40,6 +130,8 @@ const Formu_Subir_Post = () => {
           multiline
           numberOfLines={3}
           placeholder="Describe tu receta..."
+          value={descripcion}
+          onChangeText={setDescripcion}
         />
       </View>
 
@@ -50,6 +142,8 @@ const Formu_Subir_Post = () => {
           multiline
           numberOfLines={4}
           placeholder="• Papa criolla..."
+          value={ingredientes}
+          onChangeText={setIngredientes}
         />
       </View>
 
@@ -59,6 +153,8 @@ const Formu_Subir_Post = () => {
           <TextInput
             style={styles.input}
             placeholder="45 min"
+            value={tiempo}
+            onChangeText={setTiempo}
           />
         </View>
 
@@ -67,29 +163,35 @@ const Formu_Subir_Post = () => {
           <View style={styles.pickerContainer}>
             <Picker
               selectedValue={dificultad}
-              onValueChange={(itemValue) => setDificultad(itemValue)}
+              onValueChange={(v) => setDificultad(v)}
             >
-              <Picker.Item label="Fácil" value="Facil" />
-              <Picker.Item label="Media" value="Media" />
+              <Picker.Item label="Fácil"   value="Facil"   />
+              <Picker.Item label="Media"   value="Media"   />
               <Picker.Item label="Difícil" value="Dificil" />
             </Picker>
           </View>
         </View>
       </View>
 
-      <TouchableOpacity style={styles.button}>
-        <Text style={styles.buttonText}>Publicar</Text>
+      <TouchableOpacity
+        style={[styles.button, cargando && { opacity: 0.7 }]}
+        onPress={publicar}
+        disabled={cargando}
+      >
+        {cargando
+          ? <ActivityIndicator color="#fff" />
+          : <Text style={styles.buttonText}>Publicar</Text>
+        }
       </TouchableOpacity>
-
-    </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     paddingHorizontal: 25,
     paddingTop: 30,
+    paddingBottom: 40,
     backgroundColor: "#f5f7fa",
   },
   title: {
@@ -97,6 +199,27 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginBottom: 25,
     color: "#222",
+  },
+  imagePicker: {
+    height: 180,
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: "#ddd",
+    borderStyle: "dashed",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 20,
+    overflow: "hidden",
+  },
+  preview: {
+    width: "100%",
+    height: "100%",
+    resizeMode: "cover",
+  },
+  imagePlaceholder: {
+    fontSize: 15,
+    color: "#aaa",
   },
   inputContainer: {
     marginBottom: 18,
