@@ -1,14 +1,42 @@
 import React from "react";
-import { Text, TouchableOpacity, View, StyleSheet } from "react-native";
+import { Text, TouchableOpacity, View, StyleSheet, Alert } from "react-native";
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from "../App";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 type navigationProp = NativeStackNavigationProp<RootStackParamList, "Inicio_Sesion">;
 
 const Tarjeta_Perfil = () => {
 
     const navigation = useNavigation<navigationProp>();
+
+    const Cerrar_Sesion = () => {
+        Alert.alert(
+            "Cerrar sesión",
+            "¿Quieres salir de tu cuenta?",
+            [
+                {
+                    text: "Cancelar",
+                    style: "cancel"
+                },
+                {
+                    text: "Sí",
+                    onPress: async () => {
+                        try {
+                            await AsyncStorage.removeItem("token");
+                            await AsyncStorage.removeItem("usuario");
+                            Alert.alert("¡Cerraste sesión!");
+                            navigation.navigate("Inicio_Sesion");
+                        } catch (error) {
+                            console.log("Error:", error);
+                            Alert.alert("No se pudo cerrar sesión");
+                        }
+                    }
+                }
+            ]
+        );
+    };
 
     return(
         <View style={styles.card}>
@@ -18,7 +46,7 @@ const Tarjeta_Perfil = () => {
                 <Text style={styles.textoBotonPrimario}>Editar Perfil</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.botonSecundario}>
+            <TouchableOpacity style={styles.botonSecundario} onPress={Cerrar_Sesion}>
                 <Text style={styles.textoBotonSecundario}>Cerrar Sesión</Text>
             </TouchableOpacity>
         </View>

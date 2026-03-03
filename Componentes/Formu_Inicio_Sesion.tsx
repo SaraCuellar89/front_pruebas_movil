@@ -1,14 +1,97 @@
-import React from "react";
-import { Text, TextInput, TouchableOpacity, View, StyleSheet } from "react-native";
+import React, { useState } from "react";
+import { Text, TextInput, TouchableOpacity, View, StyleSheet, Alert } from "react-native";
 import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from "../App";
 
 type navigationProp = NativeStackNavigationProp<RootStackParamList, "Registro">;
 
+GoogleSignin.configure({
+    webClientId: '',
+});
+
 const Formu_Inicio_Sesion = () => {
 
     const navigation = useNavigation<navigationProp>();
+
+
+    // =============== Iniciar Sesion de manera local ===============
+    const [correo, setCorreo] = useState("");
+    const [contrasena, setContrasena] = useState("");
+
+    const Iniciar_Sesion_Local = async () => {
+        try {
+            const res = await fetch('https://pail-app-backend.vercel.app/usuarios/iniciar_sesion', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': "application/json"
+                },
+                body: JSON.stringify({correo, contrasena})
+            });
+
+            if(!res.ok){
+                return Alert.alert('No se pudo iniciar sesion');
+            }
+
+            const datos = await res.json();
+
+            console.log(datos)
+
+            // Guardar token
+            await AsyncStorage.setItem("token", datos.data.token);
+            // const token = await AsyncStorage.getItem("token")
+            // console.log(token)
+
+            // Guardar usuario
+            await AsyncStorage.setItem("usuario", JSON.stringify(datos.data));
+            const usuarioStr = await AsyncStorage.getItem("usuario"); // Obtener usuario 
+            const usuario = usuarioStr ? JSON.parse(usuarioStr) : null; // parsearlo a json
+            
+            Alert.alert(`¡Hola ${usuario.nombre}!`);
+            navigation.navigate('Perfil');
+
+        } catch (error) {
+            console.log(`Error: ${error}`);
+        }
+    }
+
+
+    // =============== Iniciar Sesion con google ===============
+    const Iniciar_Sesion_Google = async () => {
+        try {
+            await GoogleSignin.hasPlayServices();
+            const userInfo = await GoogleSignin.signIn();
+            const idToken = userInfo.data?.idToken;
+
+            if (!idToken) return Alert.alert('No se pudo obtener el token de Google');
+
+            const res = await fetch('https://pail-app-backend.vercel.app/usuarios/iniciar_sesion_google', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token: idToken })
+            });
+
+            if (!res.ok) return Alert.alert('No se pudo iniciar sesión con Google');
+
+            const datos = await res.json();
+
+            await AsyncStorage.setItem("token", datos.data.token);
+            await AsyncStorage.setItem("usuario", JSON.stringify(datos.data));
+
+            const usuarioStr = await AsyncStorage.getItem("usuario");
+            const usuario = usuarioStr ? JSON.parse(usuarioStr) : null;
+
+            Alert.alert(`¡Hola ${usuario.nombre}!`);
+            navigation.navigate('Perfil');
+
+        } catch (error: any) {
+            console.log(`Error Google: ${error}`);
+            Alert.alert('Error', error?.message || JSON.stringify(error));
+        }
+    };
+
 
     return(
         <View style={styles.container}>
@@ -20,6 +103,8 @@ const Formu_Inicio_Sesion = () => {
                     style={styles.input}
                     placeholder="ejemplo@email.com"
                     placeholderTextColor="#999"
+                    value={correo}
+                    onChangeText={setCorreo}
                 />
             </View>
 
@@ -30,11 +115,17 @@ const Formu_Inicio_Sesion = () => {
                     placeholder="••••••••"
                     placeholderTextColor="#999"
                     secureTextEntry
+                    value={contrasena}
+                    onChangeText={setContrasena}
                 />
             </View>
 
-            <TouchableOpacity style={styles.button}>
-                <Text style={styles.buttonText}>Enviar</Text>
+            <TouchableOpacity style={styles.button} onPress={Iniciar_Sesion_Local}>
+                <Text style={styles.buttonText}>Entrar</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.button} onPress={Iniciar_Sesion_Google}>
+                <Text style={styles.buttonText}>Entrar con Google</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Registro')}>
@@ -74,6 +165,7 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: "#ddd",
         fontSize: 16,
+        color: 'black'
     },
     button: {
         marginTop: 10,
