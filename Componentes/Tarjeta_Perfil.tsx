@@ -53,7 +53,7 @@ const Tarjeta_Perfil = () => {
 
     return(
         <View style={styles.card}>
-            <Text style={styles.nombre}>Nombre {nombre}</Text>
+            <Text style={styles.nombre}>{nombre}</Text>
 
             <TouchableOpacity style={styles.botonPrimario} onPress={() => navigation.navigate('Editar_Perfil')}>
                 <Text style={styles.textoBotonPrimario}>Editar Perfil</Text>

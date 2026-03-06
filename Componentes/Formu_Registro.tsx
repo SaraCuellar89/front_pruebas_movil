@@ -1,14 +1,67 @@
-import React from "react";
-import { Text, TextInput, TouchableOpacity, View, StyleSheet } from "react-native";
+import React, { useState } from "react";
+import { Text, TextInput, TouchableOpacity, View, StyleSheet, Alert } from "react-native";
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from "../App";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 type navigationProp = NativeStackNavigationProp<RootStackParamList, "Inicio_Sesion">;
 
 const Formu_Registro = () => {
 
     const navigation = useNavigation<navigationProp>();
+
+    // =============== Funcion para Registrar Usuario ===============
+    
+    const [nombre_usuario, setNombre_usuario] = useState("");
+    const [correo, setCorreo] = useState("");
+    const [contrasena, setContrasena] = useState("");
+    const [confirmacion_contrasena, setConfirmacion_contrasena] = useState("");
+    const [avatar, setAvatar] = useState("");
+
+    // En Formu_Registro.tsx
+
+const Registrar_Usuario = async () => {
+    const emailRegex = /^[^@\s]+@[^@\s]+\.(com)$/;
+
+    if (!emailRegex.test(correo)) return Alert.alert("El correo no es valido");
+    if (contrasena.length < 5) return Alert.alert("La contraseña debe tener mas de 5 caracteres");
+
+    try {
+        // 1️⃣ Registrar
+        const res = await fetch('http://3.140.94.115:3001/usuarios/registrar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nombre_usuario, correo, contrasena, confirmacion_contrasena, avatar })
+        });
+
+        if (!res.ok) return Alert.alert('No se pudo realizar el registro');
+
+        // 2️⃣ Login automático con las mismas credenciales
+        const resLogin = await fetch('http://3.140.94.115:3001/usuarios/iniciar_sesion', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ correo, contrasena })
+        });
+
+        if (!resLogin.ok) return Alert.alert('Registro exitoso pero no se pudo iniciar sesión');
+
+        const datos = await resLogin.json();
+
+        // 3️⃣ Guardar token y usuario igual que en el login
+        await AsyncStorage.setItem("token", datos.data.token);
+        await AsyncStorage.setItem("usuario", JSON.stringify(datos.data));
+
+        const usuarioStr = await AsyncStorage.getItem("usuario");
+        const usuario = usuarioStr ? JSON.parse(usuarioStr) : null;
+
+        Alert.alert(`¡Hola ${usuario.nombre}!`);
+        navigation.navigate('Perfil'); // o la pantalla que uses post-login
+
+    } catch (error) {
+        console.log(`Error: ${error}`);
+    }
+}
 
     return(
         <View style={styles.container}>
@@ -20,6 +73,8 @@ const Formu_Registro = () => {
                     style={styles.input}
                     placeholder="usuario_1"
                     placeholderTextColor="#999"
+                    value={nombre_usuario}
+                    onChangeText={setNombre_usuario}
                 />
             </View>
 
@@ -28,6 +83,8 @@ const Formu_Registro = () => {
                 <TextInput 
                     style={styles.input}
                     placeholderTextColor="#999"
+                    value={avatar}
+                    onChangeText={setAvatar}
                 />
             </View>
 
@@ -37,6 +94,8 @@ const Formu_Registro = () => {
                     style={styles.input}
                     placeholder="ejemplo@email.com"
                     placeholderTextColor="#999"
+                    value={correo}
+                    onChangeText={setCorreo}
                 />
             </View>
 
@@ -47,6 +106,8 @@ const Formu_Registro = () => {
                     placeholder="••••••••"
                     placeholderTextColor="#999"
                     secureTextEntry
+                    value={contrasena}
+                    onChangeText={setContrasena}
                 />
             </View>
 
@@ -57,10 +118,12 @@ const Formu_Registro = () => {
                     placeholder="••••••••"
                     placeholderTextColor="#999"
                     secureTextEntry
+                    value={confirmacion_contrasena}
+                    onChangeText={setConfirmacion_contrasena}
                 />
             </View>
 
-            <TouchableOpacity style={styles.button}>
+            <TouchableOpacity style={styles.button} onPress={Registrar_Usuario}>
                 <Text style={styles.buttonText}>Registrarse</Text>
             </TouchableOpacity>
 
@@ -101,6 +164,7 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: "#ddd",
         fontSize: 16,
+        color: "black"
     },
     button: {
         marginTop: 10,

@@ -9,7 +9,7 @@ import type { RootStackParamList } from "../App";
 type navigationProp = NativeStackNavigationProp<RootStackParamList, "Registro">;
 
 GoogleSignin.configure({
-    webClientId: '',
+    webClientId: '354612197459-c5q1pro6hi6nicq41lelu9ishds5a8qj.apps.googleusercontent.com',
 });
 
 const Formu_Inicio_Sesion = () => {
@@ -23,7 +23,7 @@ const Formu_Inicio_Sesion = () => {
 
     const Iniciar_Sesion_Local = async () => {
         try {
-            const res = await fetch('https://pail-app-backend.vercel.app/usuarios/iniciar_sesion', {
+            const res = await fetch('http://3.140.94.115:3001/usuarios/iniciar_sesion', {
                 method: 'POST',
                 headers: {
                     'Content-Type': "application/json"
@@ -69,7 +69,7 @@ const Formu_Inicio_Sesion = () => {
 
             if (!idToken) return Alert.alert('No se pudo obtener el token de Google');
 
-            const res = await fetch('https://pail-app-backend.vercel.app/usuarios/iniciar_sesion_google', {
+            const res = await fetch('http://3.140.94.115:3001/usuarios/iniciar_sesion_google', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ token: idToken })
@@ -80,6 +80,7 @@ const Formu_Inicio_Sesion = () => {
             const datos = await res.json();
 
             await AsyncStorage.setItem("token", datos.data.token);
+            console.log(datos.data.token)
             await AsyncStorage.setItem("usuario", JSON.stringify(datos.data));
 
             const usuarioStr = await AsyncStorage.getItem("usuario");
@@ -127,7 +128,7 @@ const Formu_Inicio_Sesion = () => {
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.button} onPress={Iniciar_Sesion_Google}>
-                <Text style={styles.buttonText}>Hola</Text>
+                <Text style={styles.buttonText}>Entrar con Google</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Registro')}>
